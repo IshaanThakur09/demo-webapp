@@ -1,3 +1,10 @@
+# Node modules & logs
+node_modules/
+dist/
+package-lock.json
+*.log
+
+
 # OS
 .DS_Store
 Thumbs.db
@@ -7,5 +14,3 @@ desktop.ini
 .vscode/
 .idea/
 
-# Misc
-*.log

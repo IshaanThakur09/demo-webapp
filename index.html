@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- Security Headers & Meta Tags -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://wa.me;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://wa.me https://accounts.google.com; frame-src https://accounts.google.com;">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- Primary SEO Meta Tags -->
   <title>Komorebi Cafe — Cozy Artisanal Coffee & Ceremonial Matcha Nook</title>
@@ -129,6 +130,31 @@
         <a id="hero-whatsapp-btn" href="#" class="btn btn-whatsapp" title="Chat on WhatsApp">
           <span>💬</span> Chat on WhatsApp
         </a>
+        <div id="auth-nav-container">
+          <button id="open-auth-btn" class="btn btn-account" type="button">
+            <svg class="account-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Log In</span>
+          </button>
+          
+          <div id="user-profile-menu" class="user-dropdown-menu hidden">
+            <div class="user-menu-header">
+              <img id="menu-user-avatar" src="" alt="User Avatar" class="menu-avatar" />
+              <div class="user-menu-info">
+                <h5 id="menu-user-name">User Name</h5>
+                <p id="menu-user-detail">user@example.com</p>
+              </div>
+            </div>
+            <div class="user-menu-divider"></div>
+            <ul class="user-menu-list">
+              <li><a href="#menu" id="menu-view-favorites"><span>🍵</span> Saved Menu Items</a></li>
+              <li><a href="#contact" id="menu-contact"><span>📍</span> Cafe Reservations</a></li>
+              <li class="logout-item"><button type="button" id="auth-logout-btn"><span>🚪</span> Sign Out</button></li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -385,8 +411,147 @@
     <span>Chat on WhatsApp</span>
   </a>
 
+  <!-- Authentication Modal -->
+  <div id="auth-modal" class="auth-modal-overlay hidden" aria-hidden="true" role="dialog">
+    <div class="auth-modal-card">
+      <button id="close-auth-modal" class="auth-modal-close" aria-label="Close login modal">&times;</button>
+      
+      <div class="auth-modal-header">
+        <div class="auth-brand-logo">🌱</div>
+        <h3>Welcome to Komorebi Cafe</h3>
+        <p>Sign in to save menu favorites and manage your reservations</p>
+      </div>
+
+      <!-- Auth Method Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-google-btn" class="auth-tab-btn active" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Google
+        </button>
+        <button id="tab-phone-btn" class="auth-tab-btn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          Phone Number
+        </button>
+      </div>
+
+      <!-- Error / Success Alert Notification -->
+      <div id="auth-alert" class="auth-alert hidden" role="alert"></div>
+
+      <!-- Google Sign-In Tab Panel -->
+      <div id="panel-google" class="auth-panel">
+        <p class="auth-panel-subtitle">Fast & secure access with your Google account</p>
+
+        <div id="g_id_onload"
+             data-client_id="1234567890-demo.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-auto_prompt="false">
+        </div>
+
+        <div class="google-official-wrapper">
+          <div class="g_id_signin"
+               data-type="standard"
+               data-shape="rectangular"
+               data-theme="outline"
+               data-text="signin_with"
+               data-size="large"
+               data-logo_alignment="left">
+          </div>
+        </div>
+
+        <div class="auth-divider"><span>OR QUICK DEMO</span></div>
+
+        <div class="google-demo-options">
+          <button id="google-demo-btn-1" class="btn btn-google-demo" type="button">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="Elena" class="demo-avatar" />
+            <div class="demo-info">
+              <span class="demo-name">Continue as Elena Rostova</span>
+              <span class="demo-email">elena.rostova@gmail.com</span>
+            </div>
+          </button>
+
+          <button id="google-demo-btn-2" class="btn btn-google-demo" type="button">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" alt="Kenji" class="demo-avatar" />
+            <div class="demo-info">
+              <span class="demo-name">Continue as Kenji Takahashi</span>
+              <span class="demo-email">kenji.takahashi@gmail.com</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Phone Login Tab Panel -->
+      <div id="panel-phone" class="auth-panel hidden">
+        
+        <!-- Step 1: Send OTP -->
+        <form id="phone-step-1-form" class="auth-form">
+          <p class="auth-panel-subtitle">We will send a 6-digit verification code to your phone number</p>
+
+          <div class="form-group">
+            <label for="phone-number-input">Mobile Phone Number</label>
+            <div class="phone-input-group">
+              <select id="country-code-select" class="country-select" aria-label="Select Country Code">
+                <option value="+1" selected>🇺🇸 +1 (US/CA)</option>
+                <option value="+91">🇮🇳 +91 (IN)</option>
+                <option value="+44">🇬🇧 +44 (UK)</option>
+                <option value="+61">🇦🇺 +61 (AU)</option>
+                <option value="+81">🇯🇵 +81 (JP)</option>
+                <option value="+49">🇩🇪 +49 (DE)</option>
+                <option value="+33">🇫🇷 +33 (FR)</option>
+              </select>
+              <input type="tel" id="phone-number-input" class="auth-input" placeholder="(555) 019-2834" required />
+            </div>
+          </div>
+
+          <button type="submit" id="send-otp-btn" class="btn btn-primary auth-submit-btn">
+            Send OTP Code 📲
+          </button>
+        </form>
+
+        <!-- Step 2: Enter & Verify OTP -->
+        <form id="phone-step-2-form" class="auth-form hidden">
+          <p class="auth-panel-subtitle">Enter the 6-digit verification code sent to <strong id="sent-phone-display">+1 (555) 019-2834</strong></p>
+
+          <div class="otp-inputs-wrapper">
+            <input type="text" maxlength="1" class="otp-digit-input" data-index="0" inputmode="numeric" pattern="[0-9]*" autofocus />
+            <input type="text" maxlength="1" class="otp-digit-input" data-index="1" inputmode="numeric" pattern="[0-9]*" />
+            <input type="text" maxlength="1" class="otp-digit-input" data-index="2" inputmode="numeric" pattern="[0-9]*" />
+            <input type="text" maxlength="1" class="otp-digit-input" data-index="3" inputmode="numeric" pattern="[0-9]*" />
+            <input type="text" maxlength="1" class="otp-digit-input" data-index="4" inputmode="numeric" pattern="[0-9]*" />
+            <input type="text" maxlength="1" class="otp-digit-input" data-index="5" inputmode="numeric" pattern="[0-9]*" />
+          </div>
+
+          <div class="otp-demo-hint">
+            💡 <span>Demo Verification Code: <strong id="demo-otp-code">123456</strong></span>
+          </div>
+
+          <button type="submit" id="verify-otp-btn" class="btn btn-primary auth-submit-btn">
+            Verify & Sign In ✨
+          </button>
+
+          <div class="otp-resend-row">
+            <button type="button" id="resend-otp-btn" class="btn-text-link" disabled>
+              Resend OTP in <span id="resend-timer-count">60</span>s
+            </button>
+            <button type="button" id="change-phone-btn" class="btn-text-link">Change Phone Number</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="js/data.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
+
 </html>
+

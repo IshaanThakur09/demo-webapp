@@ -152,3 +152,9 @@ const MENU_ITEMS = [
     highlights: "Made Fresh to Order"
   }
 ];
+
+window.CAFE_INFO = CAFE_INFO;
+window.MENU_CATEGORIES = MENU_CATEGORIES;
+window.MENU_ITEMS = MENU_ITEMS;
+
+export { CAFE_INFO, MENU_CATEGORIES, MENU_ITEMS };

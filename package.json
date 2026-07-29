@@ -1,0 +1,23 @@
+{
+  "name": "small-biz-prototype",
+  "version": "1.0.0",
+  "description": "Komorebi Cafe — Cozy Artisanal Coffee & Ceremonial Matcha Nook",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "cafe",
+    "komorebi",
+    "prototype",
+    "small-business"
+  ],
+  "author": "Komorebi Cafe",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
