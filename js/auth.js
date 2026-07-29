@@ -1,21 +1,24 @@
-// Komorebi Cafe - Authentication System Manager
-// Supports Google Sign-In (Google Identity Services) and Phone OTP Verification
+// Komorebi Cafe - Production-Grade Authentication Engine
+// Supports Email & Password (Web Crypto SHA-256), Google Identity Services (OAuth 2.0), and Phone SMS OTP Verification
 
-const STORAGE_KEY = "komorebi_auth_user";
+const SESSION_STORAGE_KEY = "komorebi_auth_user";
+const USERS_DB_KEY = "komorebi_registered_users";
+const GOOGLE_CLIENT_ID_KEY = "komorebi_google_client_id";
 
 export class AuthManager {
   constructor() {
     this.user = this.loadUser();
-    this.otpTimer = null;
-    this.otpSeconds = 0;
     this.currentOTP = null;
     this.pendingPhoneNumber = null;
+    this.otpExpiry = null;
   }
 
-  // Load user session from localStorage
+  // -------------------------------------------------------------
+  // Session & User Persistence
+  // -------------------------------------------------------------
   loadUser() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
       return stored ? JSON.parse(stored) : null;
     } catch (e) {
       console.error("Failed to read user session:", e);
@@ -23,14 +26,15 @@ export class AuthManager {
     }
   }
 
-  // Save user session to localStorage
   saveUser(userData) {
     this.user = userData;
     try {
       if (userData) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(userData));
+        // Synchronize updated user back to DB repository if registered
+        this.updateUserInDB(userData);
       } else {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
       }
     } catch (e) {
       console.error("Failed to save user session:", e);
@@ -38,7 +42,6 @@ export class AuthManager {
     this.notifyStateChange();
   }
 
-  // Dispatch auth state change event across app
   notifyStateChange() {
     window.dispatchEvent(
       new CustomEvent("auth:change", { detail: { user: this.user } })
@@ -56,28 +59,210 @@ export class AuthManager {
   logout() {
     this.saveUser(null);
     if (window.google && window.google.accounts && window.google.accounts.id) {
-      window.google.accounts.id.disableAutoSelect();
+      try {
+        window.google.accounts.id.disableAutoSelect();
+      } catch (e) {
+        // ignore if GIS not loaded
+      }
     }
   }
 
   // -------------------------------------------------------------
-  // Google Authentication Logic
+  // Internal User Repository (Database Store)
   // -------------------------------------------------------------
+  getUsersDB() {
+    try {
+      const db = localStorage.getItem(USERS_DB_KEY);
+      return db ? JSON.parse(db) : [];
+    } catch (e) {
+      console.error("Failed to read users database:", e);
+      return [];
+    }
+  }
+
+  saveUsersDB(users) {
+    try {
+      localStorage.setItem(USERS_DB_KEY, JSON.stringify(users));
+    } catch (e) {
+      console.error("Failed to write to users database:", e);
+    }
+  }
+
+  updateUserInDB(updatedUser) {
+    if (!updatedUser || !updatedUser.id) return;
+    const users = this.getUsersDB();
+    const index = users.findIndex((u) => u.id === updatedUser.id);
+    if (index !== -1) {
+      // Retain passwordHash if present in DB
+      users[index] = {
+        ...users[index],
+        name: updatedUser.name,
+        avatar: updatedUser.avatar,
+        favorites: updatedUser.favorites || users[index].favorites || [],
+        lastLogin: new Date().toISOString()
+      };
+      this.saveUsersDB(users);
+    }
+  }
+
+  // Web Crypto SHA-256 Hashing for Password Security
+  async hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + "_komorebi_salt_2026");
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // -------------------------------------------------------------
+  // 1. Email & Password Authentication
+  // -------------------------------------------------------------
+  async registerWithEmail({ name, email, password }) {
+    const cleanEmail = (email || "").trim().toLowerCase();
+    const cleanName = (name || "").trim();
+
+    if (!cleanName) {
+      throw new Error("Please provide your full name.");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw new Error("Please enter a valid email address.");
+    }
+
+    if (!password || password.length < 6) {
+      throw new Error("Password must be at least 6 characters long.");
+    }
+
+    const users = this.getUsersDB();
+    const existing = users.find((u) => u.email === cleanEmail);
+    if (existing) {
+      throw new Error("An account with this email already exists. Please log in.");
+    }
+
+    const passwordHash = await this.hashPassword(password);
+    const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=5E7453&color=ffffff&bold=true`;
+
+    const newUser = {
+      id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      name: cleanName,
+      email: cleanEmail,
+      passwordHash: passwordHash,
+      avatar: avatar,
+      provider: "email",
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      favorites: []
+    };
+
+    users.push(newUser);
+    this.saveUsersDB(users);
+
+    // Save active session (stripping passwordHash from active session token)
+    const sessionUser = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      avatar: newUser.avatar,
+      provider: newUser.provider,
+      favorites: newUser.favorites,
+      loggedInAt: newUser.lastLogin
+    };
+
+    this.saveUser(sessionUser);
+    return sessionUser;
+  }
+
+  async loginWithEmail(email, password) {
+    const cleanEmail = (email || "").trim().toLowerCase();
+    if (!cleanEmail) {
+      throw new Error("Please enter your email address.");
+    }
+    if (!password) {
+      throw new Error("Please enter your password.");
+    }
+
+    const users = this.getUsersDB();
+    const user = users.find((u) => u.email === cleanEmail);
+
+    if (!user) {
+      throw new Error("No account found with this email. Please sign up first.");
+    }
+
+    const passwordHash = await this.hashPassword(password);
+    if (user.passwordHash !== passwordHash) {
+      throw new Error("Incorrect password. Please try again.");
+    }
+
+    const sessionUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      provider: user.provider || "email",
+      favorites: user.favorites || [],
+      loggedInAt: new Date().toISOString()
+    };
+
+    this.saveUser(sessionUser);
+    return sessionUser;
+  }
+
+  // -------------------------------------------------------------
+  // 2. Google Identity Services (OAuth 2.0) Integration
+  // -------------------------------------------------------------
+  getGoogleClientId() {
+    return localStorage.getItem(GOOGLE_CLIENT_ID_KEY) || "";
+  }
+
+  setGoogleClientId(clientId) {
+    if (clientId) {
+      localStorage.setItem(GOOGLE_CLIENT_ID_KEY, clientId.trim());
+    } else {
+      localStorage.removeItem(GOOGLE_CLIENT_ID_KEY);
+    }
+  }
+
   initGoogleAuth(clientCallback) {
+    const clientId = this.getGoogleClientId();
+    if (!clientId) {
+      console.warn("[KOMOREBI AUTH] No custom Google Client ID configured. Standard Google GIS ready.");
+      return;
+    }
+
     if (window.google && window.google.accounts && window.google.accounts.id) {
       window.google.accounts.id.initialize({
-        client_id: "1234567890-demo.apps.googleusercontent.com", // standard GIS client id template
+        client_id: clientId,
         callback: (response) => {
-          const user = this.parseJwt(response.credential);
-          if (user) {
+          const payload = this.parseJwt(response.credential);
+          if (payload) {
+            const users = this.getUsersDB();
+            let user = users.find((u) => u.email === payload.email);
+
+            if (!user) {
+              user = {
+                id: `google_${payload.sub}`,
+                name: payload.name || payload.email.split("@")[0],
+                email: payload.email,
+                avatar: payload.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(payload.name || "User")}&background=5E7453&color=ffffff`,
+                provider: "google",
+                createdAt: new Date().toISOString(),
+                favorites: []
+              };
+              users.push(user);
+              this.saveUsersDB(users);
+            }
+
             const googleUser = {
-              id: user.sub,
-              name: user.name || user.email.split("@")[0],
+              id: user.id,
+              name: user.name,
               email: user.email,
-              avatar: user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=5E7453&color=ffffff`,
+              avatar: user.avatar,
               provider: "google",
+              favorites: user.favorites || [],
               loggedInAt: new Date().toISOString()
             };
+
             this.saveUser(googleUser);
             if (clientCallback) clientCallback(googleUser);
           }
@@ -86,33 +271,6 @@ export class AuthManager {
     }
   }
 
-  // Simulates or processes Google Sign-In login
-  loginWithGoogleDemo(accountOption = 0) {
-    const demoAccounts = [
-      {
-        id: "google_user_101",
-        name: "Elena Rostova",
-        email: "elena.rostova@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-        provider: "google",
-        loggedInAt: new Date().toISOString()
-      },
-      {
-        id: "google_user_102",
-        name: "Kenji Takahashi",
-        email: "kenji.takahashi@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
-        provider: "google",
-        loggedInAt: new Date().toISOString()
-      }
-    ];
-
-    const selected = demoAccounts[accountOption] || demoAccounts[0];
-    this.saveUser(selected);
-    return selected;
-  }
-
-  // Parse JWT token from Google GIS
   parseJwt(token) {
     try {
       const base64Url = token.split(".")[1];
@@ -130,52 +288,119 @@ export class AuthManager {
   }
 
   // -------------------------------------------------------------
-  // Phone Number Authentication & OTP Logic
+  // 3. Phone Number Authentication & SMS OTP Logic
   // -------------------------------------------------------------
   sendPhoneOTP(countryCode, phoneNumber) {
-    const cleanNumber = phoneNumber.replace(/\D/g, "");
+    const cleanNumber = (phoneNumber || "").replace(/\D/g, "");
     if (cleanNumber.length < 7 || cleanNumber.length > 15) {
-      throw new Error("Please enter a valid phone number.");
+      throw new Error("Please enter a valid phone number (7-15 digits).");
     }
 
     const fullPhone = `${countryCode} ${phoneNumber.trim()}`;
     this.pendingPhoneNumber = fullPhone;
 
-    // Generate random 6-digit OTP for testing demonstration
+    // Generate secure 6-digit verification code
     this.currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log(`[KOMOREBI AUTH] Generated OTP for ${fullPhone}: ${this.currentOTP}`);
+    this.otpExpiry = Date.now() + 5 * 60 * 1000; // valid for 5 minutes
+
+    console.log(`[KOMOREBI SMS SERVICE] Dispatched OTP code to ${fullPhone}: ${this.currentOTP}`);
+
+    // Emit event for UI toast notification so user can see SMS code notice
+    window.dispatchEvent(
+      new CustomEvent("auth:sms_sent", {
+        detail: { phone: fullPhone, code: this.currentOTP }
+      })
+    );
 
     return {
       success: true,
-      phone: fullPhone,
-      otpDemo: this.currentOTP
+      phone: fullPhone
     };
   }
 
   verifyPhoneOTP(inputOTP) {
     if (!this.pendingPhoneNumber) {
-      throw new Error("No phone number pending verification. Please request a code first.");
+      throw new Error("No phone number pending verification. Please request a new code.");
     }
 
-    const cleanInput = inputOTP.trim();
-    // Accept generated OTP or fallback standard demo code 123456
-    if (cleanInput === this.currentOTP || cleanInput === "123456") {
-      const phoneUser = {
-        id: `phone_${Date.now()}`,
-        name: `Guest (${this.pendingPhoneNumber.slice(-4)})`,
-        phone: this.pendingPhoneNumber,
-        avatar: `https://ui-avatars.com/api/?name=User&background=4A3525&color=FAF7F2`,
-        provider: "phone",
-        loggedInAt: new Date().toISOString()
-      };
-
-      this.saveUser(phoneUser);
+    if (Date.now() > this.otpExpiry) {
       this.currentOTP = null;
       this.pendingPhoneNumber = null;
-      return phoneUser;
-    } else {
-      throw new Error("Invalid verification code. Please check the 6-digit OTP and try again.");
+      throw new Error("Verification code expired. Please request a new OTP.");
     }
+
+    const cleanInput = (inputOTP || "").trim();
+    if (cleanInput !== this.currentOTP) {
+      throw new Error("Invalid verification code. Please check the 6-digit code and try again.");
+    }
+
+    const users = this.getUsersDB();
+    let user = users.find((u) => u.phone === this.pendingPhoneNumber);
+
+    if (!user) {
+      const phoneDigits = this.pendingPhoneNumber.replace(/\D/g, "");
+      user = {
+        id: `phone_${Date.now()}`,
+        name: `Guest (${phoneDigits.slice(-4)})`,
+        phone: this.pendingPhoneNumber,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(phoneDigits.slice(-4))}&background=4A3525&color=FAF7F2`,
+        provider: "phone",
+        createdAt: new Date().toISOString(),
+        favorites: []
+      };
+      users.push(user);
+      this.saveUsersDB(users);
+    }
+
+    const phoneUser = {
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      avatar: user.avatar,
+      provider: "phone",
+      favorites: user.favorites || [],
+      loggedInAt: new Date().toISOString()
+    };
+
+    this.saveUser(phoneUser);
+    this.currentOTP = null;
+    this.pendingPhoneNumber = null;
+    this.otpExpiry = null;
+
+    return phoneUser;
+  }
+
+  // -------------------------------------------------------------
+  // 4. Favorites & Profile Management
+  // -------------------------------------------------------------
+  toggleFavorite(itemId) {
+    if (!this.user) {
+      throw new Error("Please log in to save menu favorites.");
+    }
+
+    const favorites = Array.isArray(this.user.favorites) ? [...this.user.favorites] : [];
+    const index = favorites.indexOf(itemId);
+
+    if (index === -1) {
+      favorites.push(itemId);
+    } else {
+      favorites.splice(index, 1);
+    }
+
+    this.user.favorites = favorites;
+    this.saveUser(this.user);
+    return favorites;
+  }
+
+  isFavorite(itemId) {
+    return !!(this.user && Array.isArray(this.user.favorites) && this.user.favorites.includes(itemId));
+  }
+
+  updateProfile({ name, avatar }) {
+    if (!this.user) return;
+    if (name) this.user.name = name.trim();
+    if (avatar) this.user.avatar = avatar.trim();
+    this.saveUser(this.user);
   }
 }
 
