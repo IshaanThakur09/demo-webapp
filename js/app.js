@@ -49,8 +49,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Helper: HTML Sanitization to prevent XSS
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   // -------------------------------------------------------------
-  // 2. WhatsApp Pre-filled URL Generator
+  // 2. WhatsApp Pre-filled URL Generator (HTTPS Encrypted & URL Encoded)
   // -------------------------------------------------------------
   function buildWhatsAppUrl(customText) {
     const encodedText = encodeURIComponent(customText);
@@ -64,30 +74,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if (heroWhatsAppBtn) {
       heroWhatsAppBtn.href = buildWhatsAppUrl(generalMsg);
       heroWhatsAppBtn.target = "_blank";
+      heroWhatsAppBtn.rel = "noopener noreferrer";
     }
 
     if (floatingWhatsAppBtn) {
       floatingWhatsAppBtn.href = buildWhatsAppUrl(generalMsg);
       floatingWhatsAppBtn.target = "_blank";
+      floatingWhatsAppBtn.rel = "noopener noreferrer";
     }
 
     if (contactWhatsAppBtn) {
       contactWhatsAppBtn.href = buildWhatsAppUrl(eventMsg);
       contactWhatsAppBtn.target = "_blank";
+      contactWhatsAppBtn.rel = "noopener noreferrer";
     }
   }
 
   // -------------------------------------------------------------
-  // 3. Showcase Menu Rendering & Filtering
+  // 3. Showcase Menu Rendering & Filtering (XSS & Injection Safe)
   // -------------------------------------------------------------
   function renderCategoryTabs() {
     if (!categoryContainer) return;
     categoryContainer.innerHTML = MENU_CATEGORIES.map(cat => `
       <button 
         class="category-tab ${cat.id === activeCategory ? 'active' : ''}" 
-        data-category="${cat.id}"
+        data-category="${escapeHtml(cat.id)}"
       >
-        <span>${cat.icon}</span> ${cat.name}
+        <span>${escapeHtml(cat.icon)}</span> ${escapeHtml(cat.name)}
       </button>
     `).join("");
 
@@ -104,17 +117,20 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderMenuItems() {
     if (!menuGrid) return;
 
+    const cleanQuery = searchQuery.trim().toLowerCase();
+
     const filtered = MENU_ITEMS.filter(item => {
       const matchesCategory = activeCategory === "all" || item.category === activeCategory;
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = item.name.toLowerCase().includes(cleanQuery) || 
+                            item.description.toLowerCase().includes(cleanQuery);
       return matchesCategory && matchesSearch;
     });
 
     if (filtered.length === 0) {
+      const safeQuery = escapeHtml(searchQuery);
       menuGrid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; color: var(--text-secondary);">
-          <p style="font-size: 1.2rem; margin-bottom: 8px;">No items match "${searchQuery}"</p>
+          <p style="font-size: 1.2rem; margin-bottom: 8px;">No items match "${safeQuery}"</p>
           <p style="font-size: 0.9rem;">Explore our other categories or ask us directly on WhatsApp!</p>
         </div>
       `;
@@ -128,21 +144,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return `
         <div class="menu-card">
           <div class="card-img-wrapper">
-            <img src="${item.image}" alt="${item.name} - Komorebi Cafe Menu" loading="lazy" />
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)} - Komorebi Cafe Menu" loading="lazy" />
             <div class="card-badge-container">
-              ${item.tags.map(tag => `<span class="card-badge">${tag}</span>`).join('')}
+              ${item.tags.map(tag => `<span class="card-badge">${escapeHtml(tag)}</span>`).join('')}
             </div>
           </div>
           <div class="card-content">
             <div class="card-header">
-              <h3 class="card-title">${item.name}</h3>
+              <h3 class="card-title">${escapeHtml(item.name)}</h3>
               <span class="card-price">$${item.price.toFixed(2)}</span>
             </div>
-            <p class="card-desc">${item.description}</p>
-            <p class="card-highlight">✨ ${item.highlights}</p>
+            <p class="card-desc">${escapeHtml(item.description)}</p>
+            <p class="card-highlight">✨ ${escapeHtml(item.highlights)}</p>
             <div class="card-footer">
               <span style="font-size: 0.78rem; color: var(--text-light);">Showcase Item</span>
-              <a href="${itemWaUrl}" target="_blank" class="whatsapp-ask-btn">
+              <a href="${itemWaUrl}" target="_blank" rel="noopener noreferrer" class="whatsapp-ask-btn">
                 Ask on WhatsApp 💬
               </a>
             </div>
@@ -154,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
-      searchQuery = e.target.value.trim();
+      searchQuery = e.target.value;
       renderMenuItems();
     });
   }
