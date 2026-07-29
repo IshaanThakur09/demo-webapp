@@ -450,20 +450,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Custom Google Sign-In Button Handler
+    // Firebase Google OAuth Sign-In Button Handler
     const customGoogleBtn = document.getElementById("custom-google-btn");
     if (customGoogleBtn) {
-      customGoogleBtn.addEventListener("click", () => {
-        const clientId = authInstance.getGoogleClientId();
-        if (clientId && window.google && window.google.accounts && window.google.accounts.id) {
-          window.google.accounts.id.prompt();
-        } else {
-          const user = authInstance.loginWithGoogleAccount({
-            name: "Ishaan Thakur",
-            email: "ishaanthakur49@gmail.com"
-          });
+      customGoogleBtn.addEventListener("click", async () => {
+        try {
+          const user = await authInstance.loginWithGoogle();
           showToast(`Signed in with Google as ${user.name}! 🌿`, "success");
           setTimeout(() => hideAuthModal(), 600);
+        } catch (err) {
+          showAlert(err.message, "error");
         }
       });
     }
