@@ -1414,8 +1414,32 @@ img {
   gap: 8px;
 }
 
+.btn-google-signin {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #FFFFFF;
+  color: #3C4043;
+  border: 1px solid #DADCE0;
+  border-radius: var(--radius-md);
+  padding: 13px 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  margin-bottom: 12px;
+}
+
+.btn-google-signin:hover {
+  background-color: #F8F9FA;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
 .google-config-notice {
-  margin-top: 20px;
+  margin-top: 14px;
   text-align: center;
   font-size: 0.8rem;
   color: var(--text-secondary);

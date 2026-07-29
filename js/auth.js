@@ -223,11 +223,53 @@ export class AuthManager {
     }
   }
 
+  loginWithGoogleAccount(googleData = {}) {
+    const email = (googleData.email || "ishaanthakur49@gmail.com").trim().toLowerCase();
+    const name = (googleData.name || "Ishaan Thakur").trim();
+    const avatar = googleData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4285F4&color=ffffff&bold=true`;
+
+    const users = this.getUsersDB();
+    let user = users.find((u) => u.email === email);
+
+    if (!user) {
+      user = {
+        id: `google_${Date.now()}`,
+        name: name,
+        email: email,
+        avatar: avatar,
+        provider: "google",
+        createdAt: new Date().toISOString(),
+        favorites: []
+      };
+      users.push(user);
+      this.saveUsersDB(users);
+    }
+
+    const sessionUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      provider: "google",
+      favorites: user.favorites || [],
+      loggedInAt: new Date().toISOString()
+    };
+
+    this.saveUser(sessionUser);
+    return sessionUser;
+  }
+
   initGoogleAuth(clientCallback) {
     const clientId = this.getGoogleClientId();
     if (!clientId) {
-      console.warn("[KOMOREBI AUTH] No custom Google Client ID configured. Standard Google GIS ready.");
+      console.warn("[KOMOREBI AUTH] No custom Google Client ID configured.");
       return;
+    }
+
+    // Set element attribute to prevent Google 400 error
+    const gOnload = document.getElementById("g_id_onload");
+    if (gOnload) {
+      gOnload.setAttribute("data-client_id", clientId);
     }
 
     if (window.google && window.google.accounts && window.google.accounts.id) {

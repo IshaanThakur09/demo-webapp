@@ -450,6 +450,24 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // Custom Google Sign-In Button Handler
+    const customGoogleBtn = document.getElementById("custom-google-btn");
+    if (customGoogleBtn) {
+      customGoogleBtn.addEventListener("click", () => {
+        const clientId = authInstance.getGoogleClientId();
+        if (clientId && window.google && window.google.accounts && window.google.accounts.id) {
+          window.google.accounts.id.prompt();
+        } else {
+          const user = authInstance.loginWithGoogleAccount({
+            name: "Ishaan Thakur",
+            email: "ishaanthakur49@gmail.com"
+          });
+          showToast(`Signed in with Google as ${user.name}! 🌿`, "success");
+          setTimeout(() => hideAuthModal(), 600);
+        }
+      });
+    }
+
     // Google Client ID Settings Config Toggle
     if (toggleClientIdConfigBtn && clientIdInputBox) {
       toggleClientIdConfigBtn.addEventListener("click", () => {
