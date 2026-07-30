@@ -44,7 +44,14 @@ export class AuthManager {
   getFirebaseConfig() {
     try {
       const stored = localStorage.getItem(FIREBASE_CONFIG_KEY);
-      return stored ? JSON.parse(stored) : DEFAULT_FIREBASE_CONFIG;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.apiKey && parsed.apiKey !== "AIzaSyD-demo-komorebi-cafe-key") {
+          return parsed;
+        }
+      }
+      localStorage.removeItem(FIREBASE_CONFIG_KEY);
+      return DEFAULT_FIREBASE_CONFIG;
     } catch (e) {
       return DEFAULT_FIREBASE_CONFIG;
     }
@@ -399,6 +406,13 @@ export class AuthManager {
 
   formatFirebaseError(err) {
     const code = err?.code || "";
+    const msg = err?.message || "";
+    if (code.includes("api-key") || msg.includes("api-key") || msg.includes("API key")) {
+      try {
+        localStorage.removeItem(FIREBASE_CONFIG_KEY);
+      } catch (e) {}
+      return "Firebase credentials cache reset. Please click 'Sign in with Google' once more to connect.";
+    }
     switch (code) {
       case "auth/email-already-in-use":
         return "An account with this email already exists. Please log in.";
