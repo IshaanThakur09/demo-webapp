@@ -19,12 +19,13 @@ const FIREBASE_CONFIG_KEY = "komorebi_firebase_config";
 
 // Default Production Firebase Config
 const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD-demo-komorebi-cafe-key",
-  authDomain: "komorebi-cafe-app.firebaseapp.com",
-  projectId: "komorebi-cafe-app",
-  storageBucket: "komorebi-cafe-app.firebasestorage.app",
-  messagingSenderId: "102938475610",
-  appId: "1:102938475610:web:a1b2c3d4e5f6g7h8i9j0"
+  apiKey: "AIzaSyARbyTzJeLmZ-EJHGyo4aYc64r-vP-jqys",
+  authDomain: "fir-35bde.firebaseapp.com",
+  projectId: "fir-35bde",
+  storageBucket: "fir-35bde.firebasestorage.app",
+  messagingSenderId: "47645257774",
+  appId: "1:47645257774:web:28353806234e0cedcaeeff",
+  measurementId: "G-D8JXC8XLCL"
 };
 
 export class AuthManager {
