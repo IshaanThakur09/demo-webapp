@@ -17,12 +17,12 @@ import {
 
 // Production Firebase Config — hardcoded, no localStorage caching
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyARbyTzJeLmZ-EJHGyo4aYc64r-vP-jqys",
+  apiKey: "AIzaSyARbyTzJeLmZ-EJHGyo4aYc64r-VP-jqys",
   authDomain: "fir-35bde.firebaseapp.com",
   projectId: "fir-35bde",
   storageBucket: "fir-35bde.firebasestorage.app",
-  messagingSenderId: "47645257774",
-  appId: "1:47645257774:web:28353806234e0cedcaeeff",
+  messagingSenderId: "476452577774",
+  appId: "1:476452577774:web:28353806234e0cedcaeeff",
   measurementId: "G-D8JXC8XLCL"
 };
 
