@@ -26,10 +26,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeAuthModalBtn = document.getElementById("close-auth-modal");
   const tabEmailBtn = document.getElementById("tab-email-btn");
   const tabGoogleBtn = document.getElementById("tab-google-btn");
-  const tabPhoneBtn = document.getElementById("tab-phone-btn");
   const panelEmail = document.getElementById("panel-email");
   const panelGoogle = document.getElementById("panel-google");
-  const panelPhone = document.getElementById("panel-phone");
   const authAlert = document.getElementById("auth-alert");
 
   // Email Auth DOM Elements
@@ -43,23 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const emailSubmitBtn = document.getElementById("email-submit-btn");
   const emailTogglePrompt = document.getElementById("email-toggle-prompt");
   const toggleAuthModeBtn = document.getElementById("toggle-auth-mode-btn");
-
-  // Google Auth DOM Elements
-  const toggleClientIdConfigBtn = document.getElementById("toggle-client-id-config");
-  const clientIdInputBox = document.getElementById("client-id-input-box");
-  const googleClientIdInput = document.getElementById("google-client-id-input");
-  const saveClientIdBtn = document.getElementById("save-client-id-btn");
-
-  // Phone Auth DOM Elements
-  const phoneStep1Form = document.getElementById("phone-step-1-form");
-  const phoneStep2Form = document.getElementById("phone-step-2-form");
-  const countryCodeSelect = document.getElementById("country-code-select");
-  const phoneNumberInput = document.getElementById("phone-number-input");
-  const sentPhoneDisplay = document.getElementById("sent-phone-display");
-  const otpDigitInputs = document.querySelectorAll(".otp-digit-input");
-  const resendOtpBtn = document.getElementById("resend-otp-btn");
-  const resendTimerCount = document.getElementById("resend-timer-count");
-  const changePhoneBtn = document.getElementById("change-phone-btn");
 
   // Profile Modal DOM Elements
   const profileModal = document.getElementById("profile-modal");
@@ -88,17 +69,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderAuthNav();
     setupAuthEventListeners();
     setupProfileEventListeners();
-
-    // Listen for SMS OTP notifications
-    window.addEventListener("auth:sms_sent", (e) => {
-      showToast(`📲 SMS Sent to ${e.detail.phone}! Verification Code: ${e.detail.code}`, "info", 8000);
-    });
-
-    // Init Google Identity Services SDK if configured
-    authInstance.initGoogleAuth((user) => {
-      showToast(`Welcome back, ${user.name}! 🌿`, "success");
-      setTimeout(() => hideAuthModal(), 800);
-    });
   }
 
   // -------------------------------------------------------------
@@ -322,8 +292,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="user-menu-divider"></div>
           <ul class="user-menu-list">
-            <li><button type="button" id="menu-view-favorites"><span>🍵</span> Account & Saved Items</button></li>
-            <li><a href="#contact" id="menu-contact"><span>📍</span> Cafe Reservations</a></li>
             <li class="logout-item"><button type="button" id="auth-logout-btn"><span>🚪</span> Sign Out</button></li>
           </ul>
         </div>
@@ -331,7 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const userProfileBtn = document.getElementById("user-profile-btn");
       const dropdownMenu = document.getElementById("user-profile-menu");
-      const viewFavoritesBtn = document.getElementById("menu-view-favorites");
       const logoutBtn = document.getElementById("auth-logout-btn");
 
       userProfileBtn.addEventListener("click", (e) => {
@@ -340,13 +307,6 @@ document.addEventListener("DOMContentLoaded", () => {
         dropdownMenu.classList.toggle("hidden", !isHidden);
         userProfileBtn.setAttribute("aria-expanded", isHidden ? "true" : "false");
       });
-
-      if (viewFavoritesBtn) {
-        viewFavoritesBtn.addEventListener("click", () => {
-          dropdownMenu.classList.add("hidden");
-          showProfileModal();
-        });
-      }
 
       logoutBtn.addEventListener("click", () => {
         authInstance.logout();
@@ -385,10 +345,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Tab Switching
-    if (tabEmailBtn && tabGoogleBtn && tabPhoneBtn) {
+    if (tabEmailBtn && tabGoogleBtn) {
       tabEmailBtn.addEventListener("click", () => switchAuthTab("email"));
       tabGoogleBtn.addEventListener("click", () => switchAuthTab("google"));
-      tabPhoneBtn.addEventListener("click", () => switchAuthTab("phone"));
     }
 
     // Password Toggle
