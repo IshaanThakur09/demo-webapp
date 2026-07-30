@@ -15,10 +15,8 @@ import {
   updateProfile as firebaseUpdateProfile
 } from "firebase/auth";
 
-const FIREBASE_CONFIG_KEY = "komorebi_firebase_config";
-
-// Default Production Firebase Config
-const DEFAULT_FIREBASE_CONFIG = {
+// Production Firebase Config — hardcoded, no localStorage caching
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyARbyTzJeLmZ-EJHGyo4aYc64r-vP-jqys",
   authDomain: "fir-35bde.firebaseapp.com",
   projectId: "fir-35bde",
@@ -35,42 +33,20 @@ export class AuthManager {
     this.currentUser = null;
     this.recaptchaVerifier = null;
     this.confirmationResult = null;
+
+    // Purge any stale cached config from previous versions
+    try { localStorage.removeItem("komorebi_firebase_config"); } catch (e) {}
+
     this.initFirebase();
   }
 
   // -------------------------------------------------------------
   // Firebase App & Auth Initialization
   // -------------------------------------------------------------
-  getFirebaseConfig() {
+  initFirebase() {
     try {
-      const stored = localStorage.getItem(FIREBASE_CONFIG_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.apiKey && parsed.apiKey !== "AIzaSyD-demo-komorebi-cafe-key") {
-          return parsed;
-        }
-      }
-      localStorage.removeItem(FIREBASE_CONFIG_KEY);
-      return DEFAULT_FIREBASE_CONFIG;
-    } catch (e) {
-      return DEFAULT_FIREBASE_CONFIG;
-    }
-  }
-
-  setFirebaseConfig(config) {
-    if (config && typeof config === "object") {
-      localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(config));
-      this.initFirebase(true);
-    }
-  }
-
-  initFirebase(forceReinit = false) {
-    const config = this.getFirebaseConfig();
-    try {
-      if (forceReinit) {
-        this.app = initializeApp(config, `komorebi_app_${Date.now()}`);
-      } else if (!getApps().length) {
-        this.app = initializeApp(config);
+      if (!getApps().length) {
+        this.app = initializeApp(FIREBASE_CONFIG);
       } else {
         this.app = getApp();
       }
@@ -121,6 +97,14 @@ export class AuthManager {
     this.currentUser = null;
     this.notifyStateChange();
   }
+
+  // -------------------------------------------------------------
+  // Stubs for Google Identity Services (called by app.js)
+  // These are no-ops since we use Firebase signInWithPopup instead
+  // -------------------------------------------------------------
+  initGoogleAuth() { /* no-op: using Firebase popup flow */ }
+  getGoogleClientId() { return ""; }
+  setGoogleClientId() { /* no-op */ }
 
   // -------------------------------------------------------------
   // 1. Firebase Email & Password Authentication
@@ -195,13 +179,15 @@ export class AuthManager {
   }
 
   // -------------------------------------------------------------
-  // 2. Firebase Google OAuth Provider
+  // 2. Firebase Google OAuth Provider (real popup with account picker)
   // -------------------------------------------------------------
   async loginWithGoogle() {
     if (!this.auth) this.initFirebase();
     const provider = new GoogleAuthProvider();
     provider.addScope("profile");
     provider.addScope("email");
+    // Force account selection so users with multiple accounts can choose
+    provider.setCustomParameters({ prompt: "select_account" });
 
     try {
       const result = await signInWithPopup(this.auth, provider);
@@ -221,36 +207,8 @@ export class AuthManager {
       this.notifyStateChange();
       return this.currentUser;
     } catch (err) {
-      console.warn("[FIREBASE GOOGLE AUTH WORKFLOW]", err);
-      const code = err?.code || "";
-      const msg = err?.message || "";
-      if (
-        code.includes("api-key") ||
-        msg.includes("api-key") ||
-        msg.includes("API key") ||
-        code === "auth/invalid-api-key" ||
-        code === "auth/internal-error"
-      ) {
-        return this.fallbackGoogleAuth();
-      }
       throw new Error(this.formatFirebaseError(err));
     }
-  }
-
-  fallbackGoogleAuth() {
-    const user = {
-      uid: `google_${Date.now()}`,
-      id: `google_${Date.now()}`,
-      name: "Ishaan Thakur",
-      email: "ishaanthakur49@gmail.com",
-      avatar: `https://ui-avatars.com/api/?name=Ishaan+Thakur&background=4285F4&color=ffffff&bold=true`,
-      provider: "google.com",
-      favorites: [],
-      loggedInAt: new Date().toISOString()
-    };
-    this.currentUser = user;
-    this.notifyStateChange();
-    return user;
   }
 
   // -------------------------------------------------------------
@@ -416,7 +374,6 @@ export class AuthManager {
 
   formatFirebaseError(err) {
     const code = err?.code || "";
-    const msg = err?.message || "";
     switch (code) {
       case "auth/email-already-in-use":
         return "An account with this email already exists. Please log in.";
@@ -430,8 +387,14 @@ export class AuthManager {
         return "Password is too weak. Please use at least 6 characters.";
       case "auth/popup-closed-by-user":
         return "Google sign-in window was closed before completion.";
+      case "auth/popup-blocked":
+        return "Popup was blocked by the browser. Please allow popups for this site.";
+      case "auth/cancelled-popup-request":
+        return "Only one sign-in popup can be open at a time.";
+      case "auth/network-request-failed":
+        return "Network error. Please check your connection and try again.";
       default:
-        return msg || err?.toString() || "Authentication failed. Please try again.";
+        return err?.message || "Authentication failed. Please try again.";
     }
   }
 }
