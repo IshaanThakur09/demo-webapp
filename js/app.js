@@ -620,45 +620,17 @@ document.addEventListener("DOMContentLoaded", () => {
   function hideAuthModal() {
     authModal.classList.add("hidden");
     authModal.setAttribute("aria-hidden", "true");
-    phoneStep2Form.classList.add("hidden");
-    phoneStep1Form.classList.remove("hidden");
-    clearInterval(resendCountdownTimer);
-    clearOTPInputs();
     hideAlert();
   }
 
   function switchAuthTab(tab) {
-    tabEmailBtn.classList.toggle("active", tab === "email");
-    tabGoogleBtn.classList.toggle("active", tab === "google");
-    tabPhoneBtn.classList.toggle("active", tab === "phone");
+    if (tabEmailBtn) tabEmailBtn.classList.toggle("active", tab === "email");
+    if (tabGoogleBtn) tabGoogleBtn.classList.toggle("active", tab === "google");
 
-    panelEmail.classList.toggle("hidden", tab !== "email");
-    panelGoogle.classList.toggle("hidden", tab !== "google");
-    panelPhone.classList.toggle("hidden", tab !== "phone");
+    if (panelEmail) panelEmail.classList.toggle("hidden", tab !== "email");
+    if (panelGoogle) panelGoogle.classList.toggle("hidden", tab !== "google");
 
     hideAlert();
-  }
-
-  function clearOTPInputs() {
-    otpDigitInputs.forEach(i => i.value = "");
-    if (otpDigitInputs[0]) otpDigitInputs[0].focus();
-  }
-
-  function startResendCountdown(seconds) {
-    clearInterval(resendCountdownTimer);
-    let remaining = seconds;
-    resendOtpBtn.disabled = true;
-    resendTimerCount.innerText = remaining;
-
-    resendCountdownTimer = setInterval(() => {
-      remaining--;
-      resendTimerCount.innerText = remaining;
-      if (remaining <= 0) {
-        clearInterval(resendCountdownTimer);
-        resendOtpBtn.disabled = false;
-        resendOtpBtn.innerHTML = `Resend Code`;
-      }
-    }, 1000);
   }
 
   function showAlert(msg, type = "error") {
