@@ -60,14 +60,16 @@ export class AuthManager {
   setFirebaseConfig(config) {
     if (config && typeof config === "object") {
       localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(config));
-      this.initFirebase();
+      this.initFirebase(true);
     }
   }
 
-  initFirebase() {
+  initFirebase(forceReinit = false) {
     const config = this.getFirebaseConfig();
     try {
-      if (!getApps().length) {
+      if (forceReinit) {
+        this.app = initializeApp(config, `komorebi_app_${Date.now()}`);
+      } else if (!getApps().length) {
         this.app = initializeApp(config);
       } else {
         this.app = getApp();
@@ -410,8 +412,9 @@ export class AuthManager {
     if (code.includes("api-key") || msg.includes("api-key") || msg.includes("API key")) {
       try {
         localStorage.removeItem(FIREBASE_CONFIG_KEY);
+        this.initFirebase(true);
       } catch (e) {}
-      return "Firebase credentials cache reset. Please click 'Sign in with Google' once more to connect.";
+      return "Firebase credentials cache reset & updated. Please click 'Sign in with Google' now!";
     }
     switch (code) {
       case "auth/email-already-in-use":
