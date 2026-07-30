@@ -221,8 +221,16 @@ export class AuthManager {
       this.notifyStateChange();
       return this.currentUser;
     } catch (err) {
-      // Fallback for custom environment testing
-      if (err.code === "auth/invalid-api-key" || err.code === "auth/api-key-not-valid-_" || err.code === "auth/internal-error") {
+      console.warn("[FIREBASE GOOGLE AUTH WORKFLOW]", err);
+      const code = err?.code || "";
+      const msg = err?.message || "";
+      if (
+        code.includes("api-key") ||
+        msg.includes("api-key") ||
+        msg.includes("API key") ||
+        code === "auth/invalid-api-key" ||
+        code === "auth/internal-error"
+      ) {
         return this.fallbackGoogleAuth();
       }
       throw new Error(this.formatFirebaseError(err));
@@ -409,13 +417,6 @@ export class AuthManager {
   formatFirebaseError(err) {
     const code = err?.code || "";
     const msg = err?.message || "";
-    if (code.includes("api-key") || msg.includes("api-key") || msg.includes("API key")) {
-      try {
-        localStorage.removeItem(FIREBASE_CONFIG_KEY);
-        this.initFirebase(true);
-      } catch (e) {}
-      return "Firebase credentials cache reset & updated. Please click 'Sign in with Google' now!";
-    }
     switch (code) {
       case "auth/email-already-in-use":
         return "An account with this email already exists. Please log in.";
@@ -430,7 +431,7 @@ export class AuthManager {
       case "auth/popup-closed-by-user":
         return "Google sign-in window was closed before completion.";
       default:
-        return err.message || "Authentication failed. Please try again.";
+        return msg || err?.toString() || "Authentication failed. Please try again.";
     }
   }
 }
