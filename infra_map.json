@@ -1,0 +1,685 @@
+{
+  "project": {
+    "name": "small-biz-prototype",
+    "displayName": "Komorebi Cafe",
+    "version": "1.0.0",
+    "description": "Cozy Artisanal Coffee & Ceremonial Matcha Nook — SEO showcase single-page website with Firebase authentication, WhatsApp integration, and dynamic menu system.",
+    "type": "module",
+    "entryPoint": "index.html",
+    "license": "ISC",
+    "author": "Komorebi Cafe"
+  },
+  "buildSystem": {
+    "bundler": "vite",
+    "bundlerVersion": "^6.0.0",
+    "scripts": {
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview"
+    }, 
+    "outputDir": "dist/",
+    "buildArtifacts": {
+      "html": "dist/index.html",
+      "js": "dist/assets/index-BBbW8IYZ.js",
+      "css": "dist/assets/index-Buz84_xx.css",
+      "images": [
+        "dist/assets/corner-3seXoB9Y.jpg",
+        "dist/assets/hero-DCPXgjOc.jpg",
+        "dist/assets/matcha-CPOGk8ra.jpg",
+        "dist/assets/pastries-CEmZ116s.jpg"
+      ]
+    }
+  },
+  "dependencies": {
+    "runtime": {
+      "firebase": {
+        "version": "^12.16.0",
+        "purpose": "Authentication backend (Email/Password, Google OAuth, Phone SMS)",
+        "modules": [
+          "firebase/app",
+          "firebase/auth"
+        ]
+      }
+    },
+    "devDependencies": {
+      "vite": {
+        "version": "^6.0.0",
+        "purpose": "Development server & production bundler"
+      }
+    },
+    "external": {
+      "googleFonts": {
+        "url": "https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
+        "fonts": [
+          "Lora (serif)",
+          "Plus Jakarta Sans (sans-serif)"
+        ]
+      },
+      "googleIdentityServices": {
+        "url": "https://accounts.google.com/gsi/client",
+        "purpose": "Google Sign-In client library (loaded async)"
+      }
+    }
+  },
+  "fileTree": {
+    "index.html": {
+      "size": "25258 bytes",
+      "lines": 545,
+      "role": "Main SPA entry — all sections, modals, and structured data"
+    },
+    "css/styles.css": {
+      "size": "30715 bytes",
+      "lines": 1620,
+      "role": "Complete design system: tokens, layout, components, responsive, auth UI"
+    },
+    "js/data.js": {
+      "size": "5345 bytes",
+      "lines": 161,
+      "role": "Static data layer — cafe info, menu categories, menu items"
+    },
+    "js/auth.js": {
+      "size": "13806 bytes",
+      "lines": 403,
+      "role": "Firebase Auth engine — Email, Google OAuth, Phone SMS, favorites, profile"
+    },
+    "js/app.js": {
+      "size": "24849 bytes",
+      "lines": 662,
+      "role": "Main application controller — rendering, event listeners, UI state"
+    },
+    "images/hero.jpg": {
+      "size": "860 KB",
+      "role": "Hero banner / cafe interior"
+    },
+    "images/corner.jpg": {
+      "size": "816 KB",
+      "role": "Window corner reading nook"
+    },
+    "images/matcha.jpg": {
+      "size": "816 KB",
+      "role": "Ceremonial matcha latte"
+    },
+    "images/pastries.jpg": {
+      "size": "795 KB",
+      "role": "Artisanal pastries / bakes"
+    },
+    "package.json": {
+      "role": "Project manifest & dependency definitions"
+    },
+    ".gitignore": {
+      "role": "Git ignore rules (node_modules, dist, logs, IDE)"
+    }
+  },
+  "modules": {
+    "data.js": {
+      "path": "js/data.js",
+      "type": "ES Module",
+      "exports": [
+        "CAFE_INFO",
+        "MENU_CATEGORIES",
+        "MENU_ITEMS"
+      ],
+      "windowGlobals": [
+        "CAFE_INFO",
+        "MENU_CATEGORIES",
+        "MENU_ITEMS"
+      ],
+      "importedBy": [
+        "js/app.js"
+      ],
+      "constants": {
+        "CAFE_INFO": {
+          "fields": [
+            "name",
+            "tagline",
+            "address",
+            "phone",
+            "whatsappNumber",
+            "whatsappDisplay",
+            "email",
+            "geo",
+            "hours"
+          ],
+          "purpose": "Central cafe metadata — used for WhatsApp links, store hours, SEO, contact section"
+        },
+        "MENU_CATEGORIES": {
+          "count": 5,
+          "ids": [
+            "all",
+            "coffee",
+            "matcha-tea",
+            "bakery",
+            "brunch"
+          ],
+          "purpose": "Tab pill filters for the menu grid"
+        },
+        "MENU_ITEMS": {
+          "count": 12,
+          "fields": [
+            "id",
+            "name",
+            "category",
+            "price",
+            "description",
+            "tags",
+            "image",
+            "highlights"
+          ],
+          "purpose": "Full menu card data rendered into the menu grid"
+        }
+      }
+    },
+    "auth.js": {
+      "path": "js/auth.js",
+      "type": "ES Module",
+      "exports": [
+        "AuthManager (class)",
+        "authInstance (singleton)"
+      ],
+      "importedBy": [
+        "js/app.js"
+      ],
+      "firebaseImports": [
+        "initializeApp",
+        "getApps",
+        "getApp",
+        "getAuth",
+        "createUserWithEmailAndPassword",
+        "signInWithEmailAndPassword",
+        "signOut",
+        "onAuthStateChanged",
+        "GoogleAuthProvider",
+        "signInWithPopup",
+        "RecaptchaVerifier",
+        "signInWithPhoneNumber",
+        "updateProfile"
+      ],
+      "firebaseConfig": {
+        "projectId": "fir-35bde",
+        "authDomain": "fir-35bde.firebaseapp.com",
+        "storageBucket": "fir-35bde.firebasestorage.app",
+        "measurementId": "G-D8JXC8XLCL"
+      },
+      "authMethods": {
+        "email": {
+          "register": "registerWithEmail({ name, email, password })",
+          "login": "loginWithEmail(email, password)",
+          "features": [
+            "Input validation",
+            "Firebase updateProfile with display name & avatar URL"
+          ]
+        },
+        "google": {
+          "method": "loginWithGoogle()",
+          "flow": "signInWithPopup with GoogleAuthProvider",
+          "scopes": [
+            "profile",
+            "email"
+          ],
+          "customParams": {
+            "prompt": "select_account"
+          }
+        },
+        "phone": {
+          "sendOTP": "sendPhoneOTP(countryCode, phoneNumber, recaptchaContainerId)",
+          "verifyOTP": "verifyPhoneOTP(inputOTP)",
+          "features": [
+            "RecaptchaVerifier (invisible)",
+            "Fallback mock OTP for local dev",
+            "6-digit code validation"
+          ],
+          "customEvents": [
+            "auth:sms_sent"
+          ]
+        }
+      },
+      "userModel": {
+        "fields": [
+          "uid",
+          "id",
+          "name",
+          "email",
+          "phone",
+          "avatar",
+          "provider",
+          "favorites",
+          "loggedInAt"
+        ],
+        "avatarFallback": "https://ui-avatars.com/api/"
+      },
+      "stateManagement": {
+        "listener": "onAuthStateChanged (Firebase real-time)",
+        "customEvent": "auth:change (dispatched on window)",
+        "favoritesStorage": "localStorage key: komorebi_fav_{userId}"
+      },
+      "publicAPI": [
+        "isAuthenticated()",
+        "getUser()",
+        "logout()",
+        "registerWithEmail()",
+        "loginWithEmail()",
+        "loginWithGoogle()",
+        "sendPhoneOTP()",
+        "verifyPhoneOTP()",
+        "toggleFavorite(itemId)",
+        "isFavorite(itemId)",
+        "updateProfile({ name, avatar })",
+        "loadUserFavorites(userId)",
+        "saveUserFavorites(userId, favorites)",
+        "formatFirebaseError(err)"
+      ]
+    },
+    "app.js": {
+      "path": "js/app.js",
+      "type": "ES Module",
+      "imports": {
+        "from data.js": [
+          "CAFE_INFO",
+          "MENU_CATEGORIES",
+          "MENU_ITEMS"
+        ],
+        "from auth.js": [
+          "authInstance"
+        ]
+      },
+      "initFlow": [
+        "DOMContentLoaded listener",
+        "renderCategoryTabs()",
+        "renderMenuItems()",
+        "updateLiveStoreStatus()",
+        "setupWhatsAppLinks()",
+        "renderAuthNav()",
+        "setupAuthEventListeners()",
+        "setupProfileEventListeners()"
+      ],
+      "uiControllers": {
+        "storeStatus": {
+          "function": "updateLiveStoreStatus()",
+          "domTarget": "#status-badge",
+          "logic": "Compares current time to CAFE_INFO.hours to show Open/Closed badge"
+        },
+        "whatsApp": {
+          "function": "setupWhatsAppLinks()",
+          "buttons": [
+            "#hero-whatsapp-btn",
+            "#floating-whatsapp-btn",
+            "#contact-whatsapp-btn"
+          ],
+          "urlBuilder": "buildWhatsAppUrl(customText) → https://wa.me/{number}?text={encoded}"
+        },
+        "menuRendering": {
+          "categoryTabs": {
+            "function": "renderCategoryTabs()",
+            "container": "#menu-categories",
+            "stateVar": "activeCategory"
+          },
+          "menuGrid": {
+            "function": "renderMenuItems()",
+            "container": "#menu-grid",
+            "features": [
+              "Category filtering",
+              "Text search filtering",
+              "Favorite heart toggles",
+              "Per-item WhatsApp inquiry links",
+              "Empty state message"
+            ]
+          },
+          "search": {
+            "input": "#search-input",
+            "stateVar": "searchQuery",
+            "event": "input → renderMenuItems()"
+          }
+        },
+        "authentication": {
+          "navRenderer": "renderAuthNav()",
+          "states": {
+            "signedOut": "Shows Log In button → opens auth modal",
+            "signedIn": "Shows avatar badge with dropdown menu (Sign Out)"
+          },
+          "modal": {
+            "overlay": "#auth-modal",
+            "tabs": {
+              "email": {
+                "panelId": "#panel-email",
+                "tabBtn": "#tab-email-btn"
+              },
+              "google": {
+                "panelId": "#panel-google",
+                "tabBtn": "#tab-google-btn"
+              }
+            },
+            "emailForm": {
+              "formId": "#email-auth-form",
+              "modes": [
+                "Sign In",
+                "Sign Up (toggled via #toggle-auth-mode-btn)"
+              ],
+              "inputs": [
+                "#email-name-input (sign-up only)",
+                "#email-address-input",
+                "#email-password-input"
+              ],
+              "passwordToggle": "#toggle-password-btn"
+            },
+            "googleButton": "#custom-google-btn → authInstance.loginWithGoogle()"
+          },
+          "profileModal": {
+            "overlay": "#profile-modal",
+            "displays": [
+              "#profile-avatar-display",
+              "#profile-name-display",
+              "#profile-detail-display",
+              "#profile-provider-badge"
+            ],
+            "favoritesGrid": "#favorites-items-list",
+            "updateForm": "#update-profile-form → authInstance.updateProfile()"
+          }
+        },
+        "notifications": {
+          "toastSystem": {
+            "container": "#toast-container",
+            "function": "showToast(msg, type, duration)",
+            "types": [
+              "success",
+              "info",
+              "error"
+            ],
+            "defaultDuration": 4000
+          },
+          "authAlerts": {
+            "element": "#auth-alert",
+            "functions": [
+              "showAlert(msg, type)",
+              "hideAlert()"
+            ]
+          }
+        }
+      },
+      "security": {
+        "xssProtection": "escapeHtml() utility applied to all dynamic content rendering"
+      }
+    }
+  },
+  "htmlSections": {
+    "head": {
+      "seo": {
+        "title": "Komorebi Cafe — Cozy Artisanal Coffee & Ceremonial Matcha Nook",
+        "metaTags": [
+          "description",
+          "keywords",
+          "robots",
+          "language",
+          "author",
+          "canonical"
+        ],
+        "openGraph": [
+          "og:type",
+          "og:url",
+          "og:title",
+          "og:description",
+          "og:image",
+          "og:site_name",
+          "og:locale"
+        ],
+        "twitterCard": [
+          "twitter:card",
+          "twitter:url",
+          "twitter:title",
+          "twitter:description",
+          "twitter:image"
+        ],
+        "localSEO": [
+          "geo.region",
+          "geo.placename",
+          "geo.position",
+          "ICBM"
+        ],
+        "structuredData": {
+          "type": "CafeOrCoffeeShop (Schema.org JSON-LD)",
+          "includes": [
+            "name",
+            "address",
+            "geo",
+            "telephone",
+            "openingHours",
+            "servesCuisine",
+            "menu",
+            "sameAs"
+          ]
+        }
+      },
+      "security": {
+        "contentSecurityPolicy": "Configured via meta http-equiv for scripts, styles, fonts, images, connections, and frames",
+        "xContentTypeOptions": "nosniff",
+        "referrerPolicy": "strict-origin-when-cross-origin"
+      }
+    },
+    "body": [
+      {
+        "id": null,
+        "name": "Top Announcement Bar",
+        "class": ".top-bar",
+        "purpose": "Welcome message, live open/closed status, location tag"
+      },
+      {
+        "id": null,
+        "name": "Header Navigation",
+        "element": "header.header",
+        "purpose": "Sticky nav with brand logo, nav links, WhatsApp CTA, auth button/dropdown",
+        "navLinks": [
+          "#hero (Home)",
+          "#about (Our Story)",
+          "#menu (Menu Showcase)",
+          "#atmosphere (Atmosphere)",
+          "#contact (Visit & Contact)"
+        ]
+      },
+      {
+        "id": "hero",
+        "name": "Hero Section",
+        "purpose": "Main landing area with headline, subtitle, CTA buttons, stats, hero image with floating card"
+      },
+      {
+        "id": "about",
+        "name": "Our Story Section",
+        "purpose": "Brand philosophy — Komorebi meaning, story text, window corner image"
+      },
+      {
+        "id": "menu",
+        "name": "Menu Showcase Section",
+        "purpose": "Category tabs, search bar, dynamically rendered menu card grid with favorites & WhatsApp inquiry"
+      },
+      {
+        "id": "atmosphere",
+        "name": "Atmosphere Gallery",
+        "purpose": "4-column image gallery with hover overlays"
+      },
+      {
+        "id": "contact",
+        "name": "Visit & Contact Section",
+        "purpose": "Location, hours, phone/email details + WhatsApp box CTA"
+      },
+      {
+        "id": null,
+        "name": "Footer",
+        "element": "footer.footer",
+        "purpose": "4-column grid: brand, navigation, hours, location/social"
+      },
+      {
+        "id": "floating-whatsapp-btn",
+        "name": "Floating WhatsApp Button",
+        "purpose": "Persistent bottom-right sticky CTA for WhatsApp chat"
+      },
+      {
+        "id": "auth-modal",
+        "name": "Authentication Modal",
+        "purpose": "Login/Register overlay with Email and Google tabs"
+      },
+      {
+        "id": "profile-modal",
+        "name": "Profile & Favorites Modal",
+        "purpose": "User profile display, saved favorites grid, profile update form"
+      },
+      {
+        "id": "toast-container",
+        "name": "Toast Notification Container",
+        "purpose": "Stackable bottom-right toast notifications"
+      }
+    ]
+  },
+  "designSystem": {
+    "file": "css/styles.css",
+    "colorPalette": {
+      "bgMain": "#FAF7F2 (Warm Oatmeal)",
+      "bgSurface": "#FFFFFF",
+      "bgSurfaceAlt": "#F3ECE1",
+      "textPrimary": "#2E241E",
+      "textSecondary": "#756A60",
+      "textLight": "#A3968B",
+      "accentMatcha": "#5E7453",
+      "accentMatchaHover": "#4B5E42",
+      "accentMatchaLight": "#EAF0E7",
+      "accentEspresso": "#4A3525",
+      "accentEspressoHover": "#36261A",
+      "accentTerracotta": "#D88A58",
+      "accentTerracottaLight": "#FAF0E9",
+      "whatsappGreen": "#25D366",
+      "whatsappHover": "#20BD5A",
+      "whatsappDark": "#128C7E"
+    },
+    "typography": {
+      "serif": "Lora",
+      "sans": "Plus Jakarta Sans",
+      "usage": "Headings use serif, body & UI use sans-serif"
+    },
+    "tokens": {
+      "radii": [
+        "sm (8px)",
+        "md (16px)",
+        "lg (24px)",
+        "pill (9999px)"
+      ],
+      "shadows": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "transitions": [
+        "fast (0.2s)",
+        "normal (0.3s)"
+      ],
+      "maxWidth": "1200px"
+    },
+    "responsiveBreakpoints": {
+      "992px": "Single-column hero/contact, 2-col gallery, 2-col footer",
+      "768px": "Hidden nav links (mobile), smaller hero title, single-col footer, icon-only floating WhatsApp"
+    },
+    "animations": [
+      "dropdownFade — user dropdown menu",
+      "modalFadeIn — auth/profile modal overlays",
+      "cardSlideUp — modal card entrance",
+      "fadeInAlert — auth alert notifications",
+      "slideToast — toast slide-in from right"
+    ]
+  },
+  "integrations": {
+    "firebase": {
+      "service": "Firebase Authentication",
+      "projectId": "fir-35bde",
+      "methods": [
+        "Email/Password",
+        "Google OAuth (popup)",
+        "Phone SMS (RecaptchaVerifier)"
+      ],
+      "sdkVersion": "v12 Web Modular SDK",
+      "stateSync": "onAuthStateChanged → custom 'auth:change' event on window"
+    },
+    "whatsApp": {
+      "service": "WhatsApp Business Chat Links",
+      "baseUrl": "https://wa.me/",
+      "number": "15552348901",
+      "touchpoints": [
+        "Header nav button",
+        "Floating sticky button (bottom-right)",
+        "Contact section CTA",
+        "Per-menu-item 'Ask on WhatsApp' buttons"
+      ],
+      "messageTemplates": {
+        "general": "Hi Komorebi Cafe! 🌿 I came across your website and would love to ask a question about your menu and hours.",
+        "event": "Hi Komorebi Cafe! ☕ I'd like to ask about reserving a table or hosting a private event with you!",
+        "menuItem": "Hi Komorebi Cafe! 🌿 I saw the \"{itemName}\" on your website and would love to ask about availability/details."
+      }
+    },
+    "googleFonts": {
+      "service": "Google Fonts CDN",
+      "fonts": [
+        "Lora",
+        "Plus Jakarta Sans"
+      ],
+      "preconnect": [
+        "fonts.googleapis.com",
+        "fonts.gstatic.com"
+      ]
+    }
+  },
+  "dataFlow": {
+    "menuRendering": "data.js (MENU_ITEMS) → app.js renderMenuItems() → #menu-grid DOM",
+    "categoryFiltering": "User clicks category tab → activeCategory state → renderMenuItems() re-filter",
+    "searchFiltering": "User types in #search-input → searchQuery state → renderMenuItems() re-filter",
+    "authentication": "User action → auth.js (Firebase SDK) → onAuthStateChanged → 'auth:change' event → app.js renderAuthNav() → re-render menu hearts",
+    "favorites": "User clicks ❤️ → auth.js toggleFavorite() → localStorage persist → 'auth:change' → UI update",
+    "storeStatus": "CAFE_INFO.hours + new Date() → Open/Closed badge in #status-badge",
+    "whatsAppLinks": "CAFE_INFO.whatsappNumber + message template → wa.me URL → attached to all WhatsApp buttons"
+  },
+  "localStorage": {
+    "komorebi_fav_{userId}": {
+      "type": "JSON array of item IDs",
+      "purpose": "Persist per-user menu favorites across sessions"
+    },
+    "komorebi_firebase_config": {
+      "note": "Legacy key — actively purged on init to prevent stale config"
+    }
+  },
+  "securityModel": {
+    "csp": {
+      "defaultSrc": "'self'",
+      "scriptSrc": "'self' 'unsafe-inline' accounts.google.com *.firebaseapp.com apis.google.com",
+      "styleSrc": "'self' 'unsafe-inline' fonts.googleapis.com accounts.google.com",
+      "fontSrc": "'self' fonts.gstatic.com data:",
+      "imgSrc": "'self' data: https: blob:",
+      "connectSrc": "'self' wa.me accounts.google.com *.firebaseapp.com *.googleapis.com identitytoolkit.googleapis.com securetoken.googleapis.com wss://*.firebaseio.com",
+      "frameSrc": "'self' accounts.google.com *.firebaseapp.com"
+    },
+    "xssProtection": "escapeHtml() utility in app.js sanitizes all user-derived content before DOM insertion",
+    "referrer": "strict-origin-when-cross-origin",
+    "contentType": "X-Content-Type-Options: nosniff"
+  },
+  "seoStructuredData": {
+    "format": "JSON-LD",
+    "schema": "CafeOrCoffeeShop",
+    "fields": {
+      "name": "Komorebi Cafe",
+      "address": "742 Evergreen Nook, West Village, NY 10014",
+      "geo": {
+        "lat": 40.7336,
+        "lng": -74.0027
+      },
+      "telephone": "+15552348901",
+      "priceRange": "$$",
+      "openingHours": {
+        "weekdays": "07:30–19:00",
+        "weekends": "08:00–20:00"
+      },
+      "servesCuisine": [
+        "Coffee",
+        "Ceremonial Matcha",
+        "Bakery",
+        "Artisanal Brunch"
+      ],
+      "sameAs": [
+        "instagram.com/komorebicafe",
+        "facebook.com/komorebicafe"
+      ]
+    }
+  }
+}
